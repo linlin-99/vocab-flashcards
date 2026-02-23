@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Unit 1 闪卡练习（41词库 · 随机10词）</title>
+  <style>
+    body {
+      font-family: "Microsoft YaHei", sans-serif;
+      background: #f0f8ff;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 15px;
+      font-size: 22px;
+    }
+    .instructions {
+      color: #e74c3c;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .controls {
+      margin: 15px 0;
+    }
+    button {
+      margin: 0 8px;
+      padding: 8px 16px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #newSetBtn {
+      background-color: #e67e22;
+      color: white;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 18px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .flashcard {
+      width: 170px;
+      height: 180px;
+      perspective: 1000px;
+      cursor: pointer;
+      position: relative;
+    }
+    .flashcard.mastered {
+      opacity: 0.5;
+      transform: scale(0.95);
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      border-radius: 10px;
+    }
+    .flashcard.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      box-sizing: border-box;
+      border-radius: 10px;
+      font-size: 15px;
+    }
+    .card-front {
+      background: #3498db;
+      color: white;
+      font-weight: bold;
+    }
+    .card-back {
+      background: #2ecc71;
+      color: white;
+      font-weight: bold;
+      transform: rotateY(180deg);
+    }
+    .speak-btn {
+      background: rgba(255,255,255,0.3);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+    .check-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(255,255,255,0.8);
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #333;
+    }
+    .stats {
+      margin-top: 10px;
+      font-size: 15px;
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .note {
+      margin-top: 12px;
+      color: #7f8c8d;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🔧 Unit 1 闪卡练习（41个单词 · 每次随机10个）</h1>
+<p class="instructions">点击卡片翻转｜🔊听发音｜✅标记“已掌握”</p>
+
+<div class="controls">
+  <button id="newSetBtn">🎲 换10个新单词</button>
+</div>
+
+<div class="stats">
+  本局已掌握：<span id="masteredCount">0</span> / <span id="totalCount">10</span>
+</div>
+
+<div class="container" id="cards-container"></div>
+
+<div class="note">
+  💡 词库共 41 个单词。每次点击“换10个新单词”，都会从全部 41 个中随机抽取一组新词！
+</div>
+
+<script>
+  // ✅ 完整 Unit 1 词库（41个）
+  const FULL_VOCABULARY = [
+    { en: "internal combustion engine", zh: "内燃机" },
+    { en: "power unit", zh: "动力装置" },
+    { en: "vehicle", zh: "车辆，交通工具" },
+    { en: "construction machinery", zh: "工程机械" },
+    { en: "fuel", zh: "燃料" },
+    { en: "engine cylinder", zh: "发动机气缸" },
+    { en: "gasoline engine", zh: "汽油机" },
+    { en: "diesel engine", zh: "柴油机" },
+    { en: "crankshaft", zh: "曲轴" },
+    { en: "connecting rod", zh: "连杆" },
+    { en: "coolant", zh: "冷却液" },
+    { en: "timing belt", zh: "正时皮带" },
+    { en: "exhaust valve", zh: "排气门" },
+    { en: "inlet valve", zh: "进气门" },
+    { en: "battery", zh: "蓄电池" },
+    { en: "flywheel", zh: "飞轮" },
+    { en: "ignition switch", zh: "点火开关" },
+    { en: "ignition coil", zh: "点火线圈" },
+    { en: "starter", zh: "起动机" },
+    { en: "air filter", zh: "空气滤清器" },
+    { en: "cylinder block", zh: "气缸体" },
+    { en: "power train", zh: "动力传动系" },
+    { en: "piston", zh: "活塞" },
+    { en: "attach...to", zh: "把…依附于；把…安装到" },
+    { en: "four-stroke engine", zh: "四冲程发动机" },
+    { en: "intake stroke", zh: "进气行程" },
+    { en: "compression stroke", zh: "压缩行程" },
+    { en: "power stroke", zh: "做功行程" },
+    { en: "exhaust stroke", zh: "排气行程" },
+    { en: "as long as", zh: "只要" },
+    { en: "part", zh: "零件，部件" },
+    { en: "cylinder", zh: "气缸" },
+    { en: "cylinder head", zh: "气缸盖" },
+    { en: "camshaft", zh: "凸轮轴" },
+    { en: "valve", zh: "阀，气门" },
+    { en: "fuel pump", zh: "燃油泵" },
+    { en: "fuel injector", zh: "喷油器" },
+    { en: "fuel system", zh: "燃油系统" },
+    { en: "lubricating system", zh: "润滑系统" },
+    { en: "cooling system", zh: "冷却系统" },
+    { en: "starting system", zh: "起动系统" }
+  ];
+
+  let currentVocab = [];
+  let masteredSet = new Set();
+
+  const container = document.getElementById('cards-container');
+  const totalCountEl = document.getElementById('totalCount');
+  const masteredCountEl = document.getElementById('masteredCount');
+
+  function getRandomSubset(array, n) {
+    const shuffled = [...array].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, Math.min(n, array.length));
+  }
+
+  function renderCards(vocabList) {
+    container.innerHTML = '';
+    vocabList.forEach(item => {
+      const isMastered = masteredSet.has(item.en);
+      const card = document.createElement('div');
+      card.className = `flashcard ${isMastered ? 'mastered' : ''}`;
+      const safeEn = item.en.replace(/'/g, "\\'").replace(/"/g, '\\"');
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">
+            <div style="flex:1; display:flex; align-items:center; justify-content:center; text-align:center;">${item.en}</div>
+            <button class="speak-btn" onclick="speak(event, \`${safeEn}\`)">🔊</button>
+            <button class="check-btn" onclick="toggleMastered(event, \`${safeEn}\`)">
+              ${isMastered ? '✅' : '⬜'}
+            </button>
+          </div>
+          <div class="card-back">${item.zh}</div>
+        </div>
+      `;
+      card.addEventListener('click', (e) => {
+        if (!e.target.closest('.speak-btn') && !e.target.closest('.check-btn')) {
+          card.classList.toggle('flipped');
+        }
+      });
+      container.appendChild(card);
+    });
+    updateMasteredCount();
+  }
+
+  window.toggleMastered = function(e, en) {
+    e.stopPropagation();
+    if (masteredSet.has(en)) {
+      masteredSet.delete(en);
+    } else {
+      masteredSet.add(en);
+    }
+    renderCards(currentVocab);
+  };
+
+  function updateMasteredCount() {
+    masteredCountEl.textContent = masteredSet.size;
+  }
+
+  function startNewSet() {
+    currentVocab = getRandomSubset(FULL_VOCABULARY, 10);
+    masteredSet = new Set();
+    totalCountEl.textContent = currentVocab.length;
+    renderCards(currentVocab);
+  }
+
+  startNewSet();
+  document.getElementById('newSetBtn').addEventListener('click', startNewSet);
+
+  window.speak = function(e, text) {
+    e.stopPropagation();
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      speechSynthesis.speak(utterance);
+    } else {
+      alert("请使用 Chrome、Edge 或 Firefox 浏览器以启用发音功能。");
+    }
+  };
+</script>
+
+</body>
+</html>
